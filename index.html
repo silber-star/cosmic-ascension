@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cosmic Ascension</title>
+  <meta name="description" content="A science-inspired cosmic evolution game: from a grain of dust to stars, supernovae and black holes.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="cosmos" aria-label="Cosmic simulation" data-i18n-aria="aria.canvas"></canvas>
+
+  <!-- in-game HUD -->
+  <div id="hud" class="hidden">
+    <div id="topbar">
+      <div id="res"></div>
+      <div id="topbtns">
+        <button class="navbtn" data-panel="upgrades" data-tip="Upgrade tree (U)" data-i18n-tip="tip.upgrades"><span data-i18n="top.upgrades">Upgrades</span><i class="badge hidden" id="badge-up"></i></button>
+        <button class="navbtn" data-panel="evolution" data-tip="Evolution paths, star fates and discoveries (E)" data-i18n-tip="tip.evolution"><span data-i18n="top.evolution">Evolution</span></button>
+        <button class="navbtn" data-panel="minigames" data-tip="Minigames: extra rewards and integration with your system (G)" data-i18n-tip="tip.minigames"><span data-i18n="top.minigames">Minigames</span></button>
+        <button class="navbtn" data-panel="codex" data-tip="Codex: bodies, real numbers, your records and the science log (C)" data-i18n-tip="tip.codex"><span data-i18n="top.codex">Codex</span></button>
+        <button class="navbtn" data-panel="achievements" data-tip="Achievements: one-time research rewards, kept forever (A)" data-i18n-tip="tip.ach"><span data-i18n="top.ach">Achievements</span></button>
+        <button class="navbtn" data-panel="guide" data-tip="Guide: how the game works (H)" data-i18n-tip="tip.guide"><span data-i18n="top.guide">Guide</span></button>
+        <button class="navbtn square" id="btn-pause" data-tip="Pause, settings and saves (Esc)" data-i18n-tip="tip.pause" aria-label="Menu">☰</button>
+      </div>
+    </div>
+    <div id="rail">
+      <section id="stagebox" class="card">
+        <div class="sb-head"><span class="chapter" id="sb-chapter"></span><button class="sb-help" id="sb-help" data-tip="Explain this stage" data-i18n-tip="tip.stageHelp" aria-label="Explain this stage" data-i18n-aria="tip.stageHelp">?</button></div>
+        <div class="stagename" id="sb-name"></div>
+        <div class="bar"><div class="fill" id="sb-bar"></div></div>
+        <div class="sb-next" id="sb-next"></div>
+        <div class="now"><span class="now-label" data-i18n="ui.now">Do this now</span><p id="sb-do"></p></div>
+      </section>
+      <section id="console" class="card collapsed"></section>
+    </div>
+    <div id="evbox" class="card hidden" aria-live="polite">
+      <div class="ev-head"><b id="ev-name"></b><span id="ev-phase"></span></div>
+      <div class="ev-prog" id="ev-prog"></div>
+      <div class="bar"><div class="fill" id="ev-bar"></div></div>
+      <div class="ev-how" id="ev-how"></div>
+    </div>
+    <div id="abilities"></div>
+    <div id="toasts" aria-live="polite"></div>
+  </div>
+
+  <aside id="panel" class="glass hidden" aria-label="Panel" data-i18n-aria="aria.panel">
+    <header>
+      <nav id="panel-tabs">
+        <button data-tab="upgrades" data-i18n="top.upgrades">Upgrades</button>
+        <button data-tab="evolution" data-i18n="top.evolution">Evolution</button>
+        <button data-tab="minigames" data-i18n="top.minigames">Minigames</button>
+        <button data-tab="codex" data-i18n="top.codex">Codex</button>
+        <button data-tab="achievements" data-i18n="top.ach">Achievements</button>
+        <button data-tab="guide" data-i18n="top.guide">Guide</button>
+      </nav>
+      <button class="btn small" id="panel-close" aria-label="Close panel" data-i18n-aria="aria.closePanel">✕</button>
+    </header>
+    <div id="panel-body"></div>
+  </aside>
+
+  <!-- main menu -->
+  <div id="menu" class="hidden">
+    <div class="menu-card">
+      <h1>COSMIC ASCENSION</h1>
+      <p class="tag" data-i18n="menu.tag">From a grain of dust to the death of stars.</p>
+      <div class="menu-btns">
+        <button class="btn primary big" id="m-continue" data-i18n="menu.continue">Continue</button>
+        <button class="btn big" id="m-new" data-i18n="menu.new">New Game</button>
+        <button class="btn" id="m-settings" data-i18n="menu.settings">Settings</button>
+        <button class="btn" id="m-saves" data-i18n="menu.saves">Save Management</button>
+        <button class="btn" id="m-about" data-i18n="menu.about">How to Play &amp; Science Notes</button>
+      </div>
+      <p class="muted small" data-i18n="menu.foot">Single-player · saves locally in this browser · best with sound on</p>
+    </div>
+  </div>
+
+  <div id="modal" class="hidden" role="dialog" aria-modal="true"><div class="modal-card glass" id="modal-card"></div></div>
+
+  <div id="cine" class="hidden">
+    <div class="cine-text">
+      <div class="cine-title" id="cine-title"></div>
+      <div class="cine-sub" id="cine-sub"></div>
+      <p class="cine-body" id="cine-body"></p>
+    </div>
+    <button class="btn small" id="cine-skip"><span data-i18n="ui.skip">Skip</span> <kbd>Esc</kbd></button>
+  </div>
+
+  <!-- minigame overlay -->
+  <div id="mg" class="hidden">
+    <header class="mg-head glass">
+      <div><b id="mg-title"></b> <span class="muted" id="mg-level"></span></div>
+      <div id="mg-hud"></div>
+      <div class="row">
+        <button class="btn small" id="mg-btn-pause" data-i18n="mgui.pause">Pause</button>
+        <button class="btn small" id="mg-btn-restart"><span data-i18n="mgui.restart">Restart</span> <kbd>R</kbd></button>
+        <button class="btn small" id="mg-btn-exit" data-i18n="mgui.exit">Exit</button>
+      </div>
+    </header>
+    <canvas id="mg-canvas"></canvas>
+    <div class="mg-coach hidden" id="mg-coach" role="status"></div>
+    <button class="btn" id="mg-touch" data-i18n="mgui.action">Action</button>
+    <div id="mg-rotate" class="muted small" data-i18n="mgui.rotate">Turn your phone sideways for a bigger view</div>
+    <div class="mg-panel glass hidden" id="mg-intro"></div>
+    <div class="mg-panel glass hidden" id="mg-result"></div>
+    <div class="mg-panel glass hidden" id="mg-pause"></div>
+  </div>
+
+  <div id="tooltip" role="tooltip"></div>
+  <div id="fps" class="hidden"></div>
+
+  <script src="js/core/util.js"></script>
+  <script src="js/data/i18n.js"></script>
+  <script src="js/data/balance.js"></script>
+  <script src="js/data/stages.js"></script>
+  <script src="js/data/upgrades.js"></script>
+  <script src="js/data/events.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/data/achievements.js"></script>
+  <script src="js/data/atlas.js"></script>
+  <script src="js/core/economy.js"></script>
+  <script src="js/core/evolution.js"></script>
+  <script src="js/core/binary.js"></script>
+  <script src="js/core/records.js"></script>
+  <script src="js/core/events.js"></script>
+  <script src="js/core/guide.js"></script>
+  <script src="js/core/sim.js"></script>
+  <script src="js/core/audio.js"></script>
+  <script src="js/render/background.js"></script>
+  <script src="js/render/bodies.js"></script>
+  <script src="js/render/fx.js"></script>
+  <script src="js/render/renderer.js"></script>
+  <script src="js/minigames/models.js"></script>
+  <script src="js/minigames/framework.js"></script>
+  <script src="js/minigames/gravityArchitect.js"></script>
+  <script src="js/minigames/orbitalMechanics.js"></script>
+  <script src="js/minigames/stellarStabilization.js"></script>
+  <script src="js/minigames/spectralAnalysis.js"></script>
+  <script src="js/minigames/asteroidNavigation.js"></script>
+  <script src="js/minigames/pulsarTiming.js"></script>
+  <script src="js/minigames/blackHoleApproach.js"></script>
+  <script src="js/minigames/supernovaSurvival.js"></script>
+  <script src="js/ui/ui.js"></script>
+  <script src="js/game.js"></script>
+  <script>
+    window.addEventListener('error', function (e) { var t = document.getElementById('toasts'); if (t) { var d = document.createElement('div'); d.className = 'toast warn'; d.textContent = 'Error: ' + e.message; t.appendChild(d); } });
+    CA.Game.boot();
+  </script>
+</body>
+</html>
